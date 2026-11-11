@@ -182,6 +182,42 @@ function renderReleaseNotesParagraphs(body: string): string[] {
     .slice(0, 6)
 }
 
+function getShortFormatBadge(asset: ReleaseAssetEntry): string {
+  const lower = asset.name.toLowerCase()
+  if (lower.endsWith('.dmg')) return '.DMG'
+  if (lower.endsWith('.zip')) return '.ZIP'
+  if (lower.endsWith('.exe')) return lower.includes('portable') ? 'PORTABLE' : '.EXE'
+  if (lower.endsWith('.appimage')) return 'APPIMAGE'
+  if (lower.endsWith('.deb')) return '.DEB'
+  if (lower.endsWith('.rpm')) return '.RPM'
+  return asset.format
+}
+
+function getCleanAssetTitle(asset: ReleaseAssetEntry): string {
+  if (asset.os === 'macos') {
+    if (asset.name.toLowerCase().endsWith('.dmg')) {
+      return asset.arch === 'arm64'
+        ? 'Apple Silicon'
+        : asset.arch === 'Universal'
+          ? 'Universal Mac'
+          : 'Intel Mac'
+    }
+    return `macOS Archive (${asset.arch})`
+  }
+  return asset.label
+}
+
+function getDownloadButtonLabel(asset: ReleaseAssetEntry): string {
+  const lower = asset.name.toLowerCase()
+  if (lower.endsWith('.dmg')) return `Download DMG (${asset.arch})`
+  if (lower.endsWith('.zip')) return `Download ZIP (${asset.arch})`
+  if (lower.endsWith('.exe')) return lower.includes('portable') ? 'Download Portable' : 'Download Installer'
+  if (lower.endsWith('.appimage')) return 'Download AppImage'
+  if (lower.endsWith('.deb')) return 'Download .deb'
+  if (lower.endsWith('.rpm')) return 'Download .rpm'
+  return `Download ${asset.format}`
+}
+
 export default function App() {
   const [visitorOS] = useState<DetectedOS>(() => detectVisitorOS())
   const [selectedOS, setSelectedOS] = useState<DetectedOS>(() => detectVisitorOS())
@@ -259,6 +295,12 @@ export default function App() {
   const selectedOSAssets = latest ? latest.assetsByOS[selectedOS] : []
   const selectedOSMeta = OS_META[selectedOS]
   const releaseNotesParagraphs = latest?.body ? renderReleaseNotesParagraphs(latest.body) : []
+  const assetGridClass =
+    selectedOSAssets.length === 2 || selectedOSAssets.length === 4
+      ? 'asset-list asset-list-2col'
+      : selectedOSAssets.length === 3
+        ? 'asset-list asset-list-3col'
+        : 'asset-list'
 
   return (
     <div>
@@ -831,17 +873,9 @@ export default function App() {
           )}
 
           <div className="download-center-card reveal">
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: 12
-              }}
-            >
+            <div className="download-card-header">
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <div className="download-card-title-row">
                   <h3 style={{ margin: 0, fontSize: 22 }}>{selectedOSMeta.name} Downloads</h3>
                   {visitorOS === selectedOS && <span className="os-badge">Recommended for your device</span>}
                 </div>
@@ -855,8 +889,7 @@ export default function App() {
                   href={latest.checksumFileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-secondary"
-                  style={{ padding: '8px 14px', fontSize: 12.5 }}
+                  className="btn-secondary download-checksum-link"
                 >
                   <ShieldCheck size={14} /> SHA256SUMS.txt
                 </a>
@@ -869,7 +902,7 @@ export default function App() {
                 Loading installers from GitHub Releases...
               </div>
             ) : selectedOSAssets.length > 0 ? (
-              <div className="asset-list">
+              <div className={assetGridClass}>
                 {selectedOSAssets.map((asset, index) => {
                   const isPrimary = index === 0
                   const isCopied = copiedHashId === asset.id
@@ -878,9 +911,12 @@ export default function App() {
                       key={asset.id}
                       className={`asset-card ${isPrimary ? 'primary-asset' : ''}`}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                        <strong style={{ fontSize: 15.5 }}>{asset.label}</strong>
-                        <span className="os-badge">{asset.format}</span>
+                      <div className="asset-card-top">
+                        <div>
+                          <strong className="asset-card-title">{getCleanAssetTitle(asset)}</strong>
+                          <div className="asset-card-format">{asset.format}</div>
+                        </div>
+                        <span className="os-badge os-badge-nowrap">{getShortFormatBadge(asset)}</span>
                       </div>
 
                       <div className="asset-meta-row">
@@ -895,16 +931,7 @@ export default function App() {
                         )}
                       </div>
 
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: 'var(--text-muted)',
-                          fontFamily: 'monospace',
-                          wordBreak: 'break-all'
-                        }}
-                      >
-                        {asset.name}
-                      </div>
+                      <div className="asset-filename">{asset.name}</div>
 
                       {asset.sha256 && (
                         <div>
@@ -924,14 +951,14 @@ export default function App() {
                         </div>
                       )}
 
-                      <div style={{ marginTop: 'auto', paddingTop: 6 }}>
+                      <div className="asset-action-wrap">
                         <a
                           href={asset.url}
                           download={asset.name}
-                          className={isPrimary ? 'btn-primary' : 'btn-secondary'}
-                          style={{ width: '100%', justifyContent: 'center' }}
+                          className={`asset-download-btn ${isPrimary ? 'btn-primary' : 'btn-secondary'}`}
                         >
-                          <Download size={15} /> Download {asset.format}
+                          <Download size={15} />
+                          <span>{getDownloadButtonLabel(asset)}</span>
                         </a>
                       </div>
                     </article>
