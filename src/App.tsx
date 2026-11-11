@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   AlertCircle,
+  ArrowRight,
   CalendarDays,
   Check,
   CheckCircle2,
@@ -8,11 +9,13 @@ import {
   Clock,
   Copy,
   Cpu,
+  Database,
   Download,
   ExternalLink,
   FileText,
   History,
   Info,
+  Lock,
   Monitor,
   RefreshCw,
   Repeat,
@@ -104,36 +107,43 @@ const OS_META: Record<
   }
 }
 
-const FEATURES = [
+const PROCESS_FEATURES = [
   {
+    step: '01',
     icon: FileText,
     title: 'Flexible Schedule Ingestion',
     description:
       'Import PDF academic calendars, scanned timetables with local OCR, DOCX outlines, Excel sheets, CSVs, and ICS feeds into one chronological view.'
   },
   {
+    step: '02',
     icon: Timer,
     title: 'Focus & Pomodoro Companion',
     description:
       'Run customizable focus and break blocks with a gentle chime, header countdown pill, and automatic time tracking per task.'
   },
   {
+    step: '03',
     icon: Repeat,
     title: 'Recurring Tasks & Subtasks',
     description:
       'Set daily, weekday, weekly, or monthly habits with nested checklists and one-click overdue task rollover.'
   },
   {
-    icon: ShieldCheck,
-    title: 'Local-First & Private',
-    description:
-      'Your timetable, tasks, and notes live locally in SQLite on your device with optional PIN lock and AES-256 encrypted backups.'
-  },
-  {
+    step: '04',
     icon: Terminal,
     title: 'Command Palette & Tray Capture',
     description:
       'Press Ctrl+K to jump anywhere or Ctrl+Shift+Space globally to capture a task without breaking focus.'
+  }
+]
+
+const SECONDARY_FEATURES = [
+  {
+    icon: ShieldCheck,
+    title: 'Local-First & Private',
+    description:
+      'Your timetable, tasks, and notes live locally in SQLite on your device with optional PIN lock and AES-256 encrypted backups.'
   },
   {
     icon: Sliders,
@@ -237,6 +247,7 @@ export default function App() {
           </a>
 
           <div className="nav-links">
+            <a href="#overview">Overview</a>
             <a href="#features">Features</a>
             <a href="#download">Download</a>
             <a href="#faq">FAQ</a>
@@ -251,8 +262,11 @@ export default function App() {
         </div>
       </nav>
 
-      {/* Hero */}
+      {/* Band 1: Dark Futuristic Hero Banner */}
       <header id="top" className="hero-section">
+        <div className="hero-bg-photo" aria-hidden="true" />
+        <div className="hero-bg-grid" aria-hidden="true" />
+
         <div className="container hero-grid">
           <div>
             <span className="release-pill">
@@ -440,27 +454,141 @@ export default function App() {
         </div>
       </header>
 
-      {/* Features */}
-      <section id="features" className="section">
+      {/* Section Divider 1: Wave Transition */}
+      <div className="section-divider" style={{ background: 'var(--bg)' }}>
+        <svg viewBox="0 0 1440 56" preserveAspectRatio="none" aria-hidden="true">
+          <path
+            d="M0,18 C360,58 1080,-10 1440,34 L1440,56 L0,56 Z"
+            fill="var(--bg-surface)"
+          />
+          <path
+            d="M0,18 C360,58 1080,-10 1440,34"
+            fill="none"
+            stroke="rgba(167,136,250,0.45)"
+            strokeWidth="1.5"
+          />
+        </svg>
+      </div>
+
+      {/* Band 2: Asymmetric Spotlight with Circular Portrait Orb (Imitating Reference Band 2) */}
+      <section id="overview" className="section section-alt-surface">
+        <div className="container spotlight-grid">
+          <div>
+            <span className="section-kicker">Private Architecture</span>
+            <h2 className="section-title" style={{ textAlign: 'left' }}>
+              Everything you need, without cloud clutter
+            </h2>
+            <p className="section-desc">
+              Designed to keep schedules, tasks, and focus sessions fast, readable, and completely
+              under your control inside an isolated SQLite workspace.
+            </p>
+
+            <div className="metric-pair">
+              <div className="metric-chip">
+                <div className="metric-ring">
+                  <Database size={20} />
+                </div>
+                <div>
+                  <strong style={{ display: 'block', fontSize: 15 }}>100% Local</strong>
+                  <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>SQLite storage on disk</span>
+                </div>
+              </div>
+
+              <div className="metric-chip">
+                <div className="metric-ring">
+                  <Lock size={20} />
+                </div>
+                <div>
+                  <strong style={{ display: 'block', fontSize: 15 }}>AES-256</strong>
+                  <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Encrypted `.enc` backups</span>
+                </div>
+              </div>
+            </div>
+
+            <a href="#download" className="btn-primary">
+              <span>Explore Installers</span>
+              <ArrowRight size={16} />
+            </a>
+          </div>
+
+          <div className="orb-stage">
+            <div className="orb-glow-backdrop">
+              <img
+                src="/images/woman-laptop.jpg"
+                alt="Student reviewing daily schedules on a laptop"
+                className="orb-photo"
+              />
+            </div>
+            <div className="orb-float-badge orb-float-top">
+              <ShieldCheck size={15} color="var(--emerald)" />
+              <span>Zero Telemetry</span>
+            </div>
+            <div className="orb-float-badge orb-float-bottom">
+              <Terminal size={15} color="var(--cyan)" />
+              <span>Local OCR &amp; ICS Import</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section Divider 2: Reverse Curve */}
+      <div className="section-divider" style={{ background: 'var(--bg-surface)' }}>
+        <svg viewBox="0 0 1440 56" preserveAspectRatio="none" aria-hidden="true">
+          <path
+            d="M0,40 C440,-8 1000,62 1440,14 L1440,56 L0,56 Z"
+            fill="var(--bg)"
+          />
+          <path
+            d="M0,40 C440,-8 1000,62 1440,14"
+            fill="none"
+            stroke="rgba(56,189,248,0.4)"
+            strokeWidth="1.5"
+          />
+        </svg>
+      </div>
+
+      {/* Band 3: Zigzag Connected 4-Step Flow + Supporting Features (Imitating "Our Working Process") */}
+      <section id="features" className="section section-mesh">
         <div className="container">
           <div className="section-header">
             <span className="section-kicker">Features</span>
-            <h2 className="section-title">Everything you need, without cloud clutter</h2>
+            <h2 className="section-title">How Selah Organizes Your Day</h2>
             <p className="section-desc">
-              Designed to keep schedules, tasks, and focus sessions fast, readable, and completely under your control.
+              Four connected core workflows backed by private local encryption and adaptive themes.
             </p>
           </div>
 
-          <div className="features-grid">
-            {FEATURES.map(feature => {
+          <div className="process-flow">
+            {PROCESS_FEATURES.map((item, idx) => {
+              const Icon = item.icon
+              return (
+                <article
+                  key={item.title}
+                  className={`process-node ${idx % 2 === 1 ? 'offset-down' : ''}`}
+                >
+                  <div className="process-icon-wrap">
+                    <Icon size={24} />
+                    <span className="process-step-num">{item.step}</span>
+                  </div>
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </article>
+              )
+            })}
+          </div>
+
+          <div className="features-secondary-grid">
+            {SECONDARY_FEATURES.map(feature => {
               const Icon = feature.icon
               return (
                 <article key={feature.title} className="feature-card">
                   <div className="feature-icon-box">
                     <Icon size={20} />
                   </div>
-                  <h3>{feature.title}</h3>
-                  <p>{feature.description}</p>
+                  <div>
+                    <h3>{feature.title}</h3>
+                    <p>{feature.description}</p>
+                  </div>
                 </article>
               )
             })}
@@ -468,8 +596,112 @@ export default function App() {
         </div>
       </section>
 
-      {/* Multi-Platform Download Center */}
-      <section id="download" className="section" style={{ borderTop: '1px solid var(--border)' }}>
+      {/* Section Divider 3: Angled Tech Beam */}
+      <div className="section-divider" style={{ background: 'var(--bg)' }}>
+        <svg viewBox="0 0 1440 56" preserveAspectRatio="none" aria-hidden="true">
+          <polygon points="0,46 1440,6 1440,56 0,56" fill="var(--bg-surface)" />
+          <line
+            x1="0"
+            y1="46"
+            x2="1440"
+            y2="6"
+            stroke="rgba(167,136,250,0.45)"
+            strokeWidth="1.5"
+          />
+        </svg>
+      </div>
+
+      {/* Band 4: Why Choose Selah with Rounded-Arch Violet Frame (Imitating Reference Band 4) */}
+      <section className="section section-alt-surface">
+        <div className="container spotlight-grid">
+          <div>
+            <span className="section-kicker">Cross-Platform Built</span>
+            <h2 className="section-title" style={{ textAlign: 'left' }}>
+              Consistent speed across Windows, macOS, and Linux
+            </h2>
+            <p className="section-desc">
+              Every installer bundles native SQLite storage isolated inside your OS user directory,
+              keeping schedules safe across app updates and reinstalls.
+            </p>
+
+            <div className="metric-pair">
+              <div className="metric-chip">
+                <div className="metric-ring">
+                  <Monitor size={20} />
+                </div>
+                <div>
+                  <strong style={{ display: 'block', fontSize: 15 }}>3 Platforms</strong>
+                  <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>EXE, DMG/ZIP, AppImage/DEB/RPM</span>
+                </div>
+              </div>
+
+              <div className="metric-chip">
+                <div className="metric-ring">
+                  <ShieldCheck size={20} />
+                </div>
+                <div>
+                  <strong style={{ display: 'block', fontSize: 15 }}>SHA-256</strong>
+                  <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Verified release manifests</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 14 }}>
+              <a
+                href={primaryDownloadUrl}
+                download={primaryVisitorAsset?.name}
+                className="btn-primary"
+              >
+                <Download size={16} />
+                <span>Download {versionBadge}</span>
+              </a>
+              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                MIT Open Source | Offline Ready
+              </span>
+            </div>
+          </div>
+
+          <div className="arch-stage">
+            <div className="arch-frame">
+              <img
+                src="/images/focus-setup.jpg"
+                alt="Modern laptop workspace calibrated for Selah"
+                className="arch-main-photo"
+              />
+              <div className="arch-inset-card">
+                <img
+                  src="/images/study-laptop.jpg"
+                  alt="Student notebook and timetable study desk"
+                  className="arch-inset-photo"
+                />
+                <div className="arch-inset-caption">
+                  <CheckCircle2 size={13} color="var(--emerald)" />
+                  <span>Direct offline study logs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section Divider 4: Layered Wave */}
+      <div className="section-divider" style={{ background: 'var(--bg-surface)' }}>
+        <svg viewBox="0 0 1440 56" preserveAspectRatio="none" aria-hidden="true">
+          <path
+            d="M0,12 C480,58 960,-6 1440,36 L1440,56 L0,56 Z"
+            fill="var(--bg)"
+          />
+          <path
+            d="M0,12 C480,58 960,-6 1440,36"
+            fill="none"
+            stroke="rgba(56,189,248,0.42)"
+            strokeWidth="1.5"
+          />
+        </svg>
+      </div>
+
+      {/* Band 5: Multi-Platform Download Center */}
+      <section id="download" className="section section-mesh">
         <div className="container">
           <div className="section-header">
             <span className="section-kicker">Multi-Platform Installers</span>
@@ -801,8 +1033,10 @@ export default function App() {
         </div>
       </section>
 
+      <div className="divider-line-glow" />
+
       {/* FAQ */}
-      <section id="faq" className="section" style={{ borderTop: '1px solid var(--border)' }}>
+      <section id="faq" className="section section-alt-surface">
         <div className="container">
           <div className="section-header">
             <span className="section-kicker">FAQ</span>
