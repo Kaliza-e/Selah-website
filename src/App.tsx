@@ -16,6 +16,7 @@ import {
   History,
   Info,
   Lock,
+  Menu,
   Monitor,
   RefreshCw,
   Repeat,
@@ -23,7 +24,8 @@ import {
   ShieldCheck,
   Sliders,
   Terminal,
-  Timer
+  Timer,
+  X
 } from 'lucide-react'
 import {
   BASELINE_HISTORY,
@@ -190,6 +192,28 @@ export default function App() {
   const [copiedHashId, setCopiedHashId] = useState<string | null>(null)
   const [previewTab, setPreviewTab] = useState<'today' | 'schedules' | 'focus'>('today')
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll('.reveal'))
+    if (typeof IntersectionObserver === 'undefined') {
+      els.forEach(el => el.classList.add('is-visible'))
+      return
+    }
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -32px 0px' }
+    )
+    els.forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
 
   const loadReleases = useCallback(async (forceRefresh = false, signal?: AbortSignal) => {
     setLoading(true)
@@ -256,8 +280,42 @@ export default function App() {
             </a>
           </div>
 
-          <a href={primaryDownloadUrl} download={primaryVisitorAsset?.name} className="nav-cta">
-            <Download size={15} /> Download
+          <div className="nav-actions">
+            <a href={primaryDownloadUrl} download={primaryVisitorAsset?.name} className="nav-cta">
+              <Download size={15} /> Download
+            </a>
+            <button
+              type="button"
+              className="mobile-menu-btn"
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen(prev => !prev)}
+            >
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          </div>
+        </div>
+
+        <div className={`container mobile-nav-drawer ${mobileMenuOpen ? 'open' : ''}`}>
+          <a href="#overview" onClick={() => setMobileMenuOpen(false)}>
+            Overview
+          </a>
+          <a href="#features" onClick={() => setMobileMenuOpen(false)}>
+            Features
+          </a>
+          <a href="#download" onClick={() => setMobileMenuOpen(false)}>
+            Download
+          </a>
+          <a href="#faq" onClick={() => setMobileMenuOpen(false)}>
+            FAQ
+          </a>
+          <a
+            href={GITHUB_REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            GitHub
           </a>
         </div>
       </nav>
@@ -354,101 +412,103 @@ export default function App() {
             </div>
 
             <div className="preview-body">
-              {previewTab === 'today' && (
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 16 }}>Good morning</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                        3 tasks planned | 1 upcoming seminar
-                      </div>
-                    </div>
-                    <span className="os-badge">Ctrl+K Palette</span>
-                  </div>
-                  <div className="preview-card">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <CheckCircle2 size={16} color="var(--emerald)" />
+              <div key={previewTab} className="preview-tab-panel">
+                {previewTab === 'today' && (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <div style={{ fontSize: 13.5, fontWeight: 600 }}>Finalize systems design outline</div>
-                        <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>Today 14:00 | 45m | Weekly</div>
+                        <div style={{ fontWeight: 700, fontSize: 16 }}>Good morning</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                          3 tasks planned | 1 upcoming seminar
+                        </div>
                       </div>
+                      <span className="os-badge">Ctrl+K Palette</span>
                     </div>
-                    <span className="os-badge">2/3 steps</span>
-                  </div>
-                  <div className="preview-card">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <Clock size={16} color="var(--cyan)" />
+                    <div className="preview-card">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <CheckCircle2 size={16} color="var(--emerald)" />
+                        <div>
+                          <div style={{ fontSize: 13.5, fontWeight: 600 }}>Finalize systems design outline</div>
+                          <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>Today 14:00 | 45m | Weekly</div>
+                        </div>
+                      </div>
+                      <span className="os-badge">2/3 steps</span>
+                    </div>
+                    <div className="preview-card">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <Clock size={16} color="var(--cyan)" />
+                        <div>
+                          <div style={{ fontSize: 13.5, fontWeight: 600 }}>Distributed Algorithms Seminar</div>
+                          <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>15:30 - 17:00 | Hall B-204</div>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>In 1h 20m</span>
+                    </div>
+                  </>
+                )}
+
+                {previewTab === 'schedules' && (
+                  <>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)' }}>
+                      Parsed Academic Calendar &amp; Exam Dates
+                    </div>
+                    <div className="preview-card">
                       <div>
-                        <div style={{ fontSize: 13.5, fontWeight: 600 }}>Distributed Algorithms Seminar</div>
-                        <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>15:30 - 17:00 | Hall B-204</div>
+                        <div style={{ fontSize: 13.5, fontWeight: 600 }}>Midterm Assessments Window</div>
+                        <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
+                          Source: ACADEMIC_CALENDAR.pdf | Reviewed
+                        </div>
                       </div>
+                      <span className="os-badge">Exams</span>
                     </div>
-                    <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>In 1h 20m</span>
-                  </div>
-                </>
-              )}
+                    <div className="preview-card">
+                      <div>
+                        <div style={{ fontSize: 13.5, fontWeight: 600 }}>Capstone Proposal Submission</div>
+                        <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
+                          All-day deadline | Reminder 24h before
+                        </div>
+                      </div>
+                      <span className="os-badge">Assignments</span>
+                    </div>
+                  </>
+                )}
 
-              {previewTab === 'schedules' && (
-                <>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)' }}>
-                    Parsed Academic Calendar &amp; Exam Dates
-                  </div>
-                  <div className="preview-card">
-                    <div>
-                      <div style={{ fontSize: 13.5, fontWeight: 600 }}>Midterm Assessments Window</div>
-                      <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
-                        Source: ACADEMIC_CALENDAR.pdf | Reviewed
-                      </div>
-                    </div>
-                    <span className="os-badge">Exams</span>
-                  </div>
-                  <div className="preview-card">
-                    <div>
-                      <div style={{ fontSize: 13.5, fontWeight: 600 }}>Capstone Proposal Submission</div>
-                      <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
-                        All-day deadline | Reminder 24h before
-                      </div>
-                    </div>
-                    <span className="os-badge">Assignments</span>
-                  </div>
-                </>
-              )}
-
-              {previewTab === 'focus' && (
-                <div
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 10,
-                    textAlign: 'center'
-                  }}
-                >
+                {previewTab === 'focus' && (
                   <div
                     style={{
-                      width: 118,
-                      height: 118,
-                      borderRadius: '50%',
-                      border: '3px solid var(--accent)',
+                      flex: 1,
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      background: 'var(--accent-soft)'
+                      gap: 10,
+                      textAlign: 'center'
                     }}
                   >
-                    <span style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--accent)', fontWeight: 700 }}>
-                      Pomodoro
-                    </span>
-                    <span style={{ fontSize: 26, fontWeight: 800, fontFamily: 'monospace' }}>24:18</span>
+                    <div
+                      style={{
+                        width: 118,
+                        height: 118,
+                        borderRadius: '50%',
+                        border: '3px solid var(--accent)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'var(--accent-soft)'
+                      }}
+                    >
+                      <span style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--accent)', fontWeight: 700 }}>
+                        Pomodoro
+                      </span>
+                      <span style={{ fontSize: 26, fontWeight: 800, fontFamily: 'monospace' }}>24:18</span>
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                      Study block synchronized with header countdown pill
+                    </div>
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                    Study block synchronized with header countdown pill
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -470,10 +530,10 @@ export default function App() {
         </svg>
       </div>
 
-      {/* Band 2: Asymmetric Spotlight with Circular Portrait Orb (Imitating Reference Band 2) */}
+      {/* Band 2: Asymmetric Spotlight with Circular Hardware Orb */}
       <section id="overview" className="section section-alt-surface">
         <div className="container spotlight-grid">
-          <div>
+          <div className="reveal">
             <span className="section-kicker">Private Architecture</span>
             <h2 className="section-title" style={{ textAlign: 'left' }}>
               Everything you need, without cloud clutter
@@ -500,7 +560,7 @@ export default function App() {
                 </div>
                 <div>
                   <strong style={{ display: 'block', fontSize: 15 }}>AES-256</strong>
-                  <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Encrypted `.enc` backups</span>
+                  <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Encrypted .enc backups</span>
                 </div>
               </div>
             </div>
@@ -511,21 +571,15 @@ export default function App() {
             </a>
           </div>
 
-          <div className="orb-stage">
+          <div className="orb-stage reveal reveal-delay-1">
+            <div className="orb-aura" aria-hidden="true" />
             <div className="orb-glow-backdrop">
+              <div className="orb-ring-dashed" aria-hidden="true" />
               <img
-                src="/images/woman-laptop.jpg"
-                alt="Student reviewing daily schedules on a laptop"
+                src="/images/desk-hero.jpg"
+                alt="Minimalist laptop and monitor study workspace"
                 className="orb-photo"
               />
-            </div>
-            <div className="orb-float-badge orb-float-top">
-              <ShieldCheck size={15} color="var(--emerald)" />
-              <span>Zero Telemetry</span>
-            </div>
-            <div className="orb-float-badge orb-float-bottom">
-              <Terminal size={15} color="var(--cyan)" />
-              <span>Local OCR &amp; ICS Import</span>
             </div>
           </div>
         </div>
@@ -550,7 +604,7 @@ export default function App() {
       {/* Band 3: Zigzag Connected 4-Step Flow + Supporting Features (Imitating "Our Working Process") */}
       <section id="features" className="section section-mesh">
         <div className="container">
-          <div className="section-header">
+          <div className="section-header reveal">
             <span className="section-kicker">Features</span>
             <h2 className="section-title">How Selah Organizes Your Day</h2>
             <p className="section-desc">
@@ -564,7 +618,7 @@ export default function App() {
               return (
                 <article
                   key={item.title}
-                  className={`process-node ${idx % 2 === 1 ? 'offset-down' : ''}`}
+                  className={`process-node reveal reveal-delay-${Math.min(idx + 1, 4)} ${idx % 2 === 1 ? 'offset-down' : ''}`}
                 >
                   <div className="process-icon-wrap">
                     <Icon size={24} />
@@ -578,10 +632,13 @@ export default function App() {
           </div>
 
           <div className="features-secondary-grid">
-            {SECONDARY_FEATURES.map(feature => {
+            {SECONDARY_FEATURES.map((feature, idx) => {
               const Icon = feature.icon
               return (
-                <article key={feature.title} className="feature-card">
+                <article
+                  key={feature.title}
+                  className={`feature-card reveal reveal-delay-${Math.min(idx + 1, 4)}`}
+                >
                   <div className="feature-icon-box">
                     <Icon size={20} />
                   </div>
@@ -611,10 +668,10 @@ export default function App() {
         </svg>
       </div>
 
-      {/* Band 4: Why Choose Selah with Rounded-Arch Violet Frame (Imitating Reference Band 4) */}
+      {/* Band 4: Why Choose Selah with Rounded-Arch Violet Frame */}
       <section className="section section-alt-surface">
         <div className="container spotlight-grid">
-          <div>
+          <div className="reveal">
             <span className="section-kicker">Cross-Platform Built</span>
             <h2 className="section-title" style={{ textAlign: 'left' }}>
               Consistent speed across Windows, macOS, and Linux
@@ -661,24 +718,13 @@ export default function App() {
             </div>
           </div>
 
-          <div className="arch-stage">
+          <div className="arch-stage reveal reveal-delay-1">
             <div className="arch-frame">
               <img
                 src="/images/focus-setup.jpg"
                 alt="Modern laptop workspace calibrated for Selah"
                 className="arch-main-photo"
               />
-              <div className="arch-inset-card">
-                <img
-                  src="/images/study-laptop.jpg"
-                  alt="Student notebook and timetable study desk"
-                  className="arch-inset-photo"
-                />
-                <div className="arch-inset-caption">
-                  <CheckCircle2 size={13} color="var(--emerald)" />
-                  <span>Direct offline study logs</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -703,7 +749,7 @@ export default function App() {
       {/* Band 5: Multi-Platform Download Center */}
       <section id="download" className="section section-mesh">
         <div className="container">
-          <div className="section-header">
+          <div className="section-header reveal">
             <span className="section-kicker">Multi-Platform Installers</span>
             <h2 className="section-title">Download Selah ({versionBadge})</h2>
             <p className="section-desc">
@@ -722,16 +768,7 @@ export default function App() {
           </div>
 
           {/* OS Switcher & Refresh */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: 12,
-              marginBottom: 20
-            }}
-          >
+          <div className="download-toolbar">
             <div className="os-tabs" role="tablist" aria-label="Operating system downloads">
               {(['windows', 'macos', 'linux'] as DetectedOS[]).map(osKey => {
                 const isSelected = selectedOS === osKey
@@ -793,7 +830,7 @@ export default function App() {
             </div>
           )}
 
-          <div className="download-center-card">
+          <div className="download-center-card reveal">
             <div
               style={{
                 display: 'flex',
@@ -1038,7 +1075,7 @@ export default function App() {
       {/* FAQ */}
       <section id="faq" className="section section-alt-surface">
         <div className="container">
-          <div className="section-header">
+          <div className="section-header reveal">
             <span className="section-kicker">FAQ</span>
             <h2 className="section-title">Common questions</h2>
           </div>
