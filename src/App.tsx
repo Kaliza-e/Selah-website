@@ -23,6 +23,8 @@ import {
   Timer
 } from 'lucide-react'
 import {
+  BASELINE_HISTORY,
+  BASELINE_RELEASE,
   detectVisitorOS,
   fetchReleasesData,
   formatReleaseDate,
@@ -171,8 +173,8 @@ function renderReleaseNotesParagraphs(body: string): string[] {
 export default function App() {
   const [visitorOS] = useState<DetectedOS>(() => detectVisitorOS())
   const [selectedOS, setSelectedOS] = useState<DetectedOS>(() => detectVisitorOS())
-  const [latest, setLatest] = useState<ReleaseSummary | null>(null)
-  const [history, setHistory] = useState<PastReleaseItem[]>([])
+  const [latest, setLatest] = useState<ReleaseSummary | null>(() => BASELINE_RELEASE)
+  const [history, setHistory] = useState<PastReleaseItem[]>(() => BASELINE_HISTORY)
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [copiedHashId, setCopiedHashId] = useState<string | null>(null)
@@ -184,14 +186,15 @@ export default function App() {
     setErrorMsg(null)
     try {
       const result = await fetchReleasesData({ forceRefresh, signal })
-      setLatest(result.latest)
-      setHistory(result.history)
-      if (!result.latest) {
-        setErrorMsg('No published release metadata was returned yet. Use GitHub Releases directly below.')
+      if (result.latest?.hasAnyAssets) {
+        setLatest(result.latest)
+      }
+      if (result.history.length > 0) {
+        setHistory(result.history)
       }
     } catch (err) {
       if ((err as Error)?.name === 'AbortError') return
-      setErrorMsg('Unable to reach GitHub Releases API right now. You can still browse packages directly on GitHub.')
+      setErrorMsg('Live GitHub metadata check could not refresh right now. Showing verified release installers below.')
     } finally {
       setLoading(false)
     }
@@ -242,7 +245,7 @@ export default function App() {
             </a>
           </div>
 
-          <a href={primaryDownloadUrl} className="nav-cta">
+          <a href={primaryDownloadUrl} download={primaryVisitorAsset?.name} className="nav-cta">
             <Download size={15} /> Download
           </a>
         </div>
@@ -268,6 +271,7 @@ export default function App() {
             <div className="hero-actions">
               <a
                 href={primaryDownloadUrl}
+                download={primaryVisitorAsset?.name}
                 className="btn-primary"
                 target={primaryVisitorAsset ? undefined : '_blank'}
                 rel={primaryVisitorAsset ? undefined : 'noopener noreferrer'}
@@ -654,6 +658,7 @@ export default function App() {
                       <div style={{ marginTop: 'auto', paddingTop: 6 }}>
                         <a
                           href={asset.url}
+                          download={asset.name}
                           className={isPrimary ? 'btn-primary' : 'btn-secondary'}
                           style={{ width: '100%', justifyContent: 'center' }}
                         >

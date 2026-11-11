@@ -63,12 +63,95 @@ export interface GitHubApiRelease {
 }
 
 const REPO_OWNER = 'Kaliza-e'
-const REPO_NAME = 'Hello_118_24'
+const REPO_NAME = 'Selah'
 export const GITHUB_REPO_URL = `https://github.com/${REPO_OWNER}/${REPO_NAME}`
 export const GITHUB_RELEASES_URL = `${GITHUB_REPO_URL}/releases`
 
-const CACHE_KEY = 'selah_release_cache_v2'
+const CACHE_KEY = 'selah_release_cache_v3'
 const CACHE_TTL_MS = 5 * 60 * 1000
+
+const VERIFIED_V032_CHECKSUMS: Record<string, string> = {
+  'Selah-Portable-0.3.2-x64.exe': 'a21f9761d9719b00541059314b5ea7bb8378ffee3d3735df282ec1a9cc6fbc7c',
+  'Selah-Setup-0.3.2-x64.exe': '33495a196c64c96a6f90e157cb09930a47786fdffdbf9a5e414f61e9afae915a',
+  'Selah-0.3.2-arm64.dmg': '77ef6d4bacfd6a45a31bc3213d240dfb21c241363697cb189bde57bb92df4d1f',
+  'Selah-0.3.2-x64.dmg': 'c46f111e8cc79138e8f7cdb593a908db6a3593a36298c99ead8810d3a1312409',
+  'Selah-0.3.2-arm64.zip': 'bb3b8a0c0298c33e25f290f84f0fe7bb156b8dc552ae9c4fbd6744505a728c7f',
+  'Selah-0.3.2-x64.zip': 'f8d06a4e9466cacd934296bc245ebe5502b9c59084724bf58418523c488a879a',
+  'selah-0.3.2-x86_64.AppImage': 'f53ed3771ec9fd889c3ed1c7aad3fa85873ee1944a848679f0339b33df887ebd',
+  'selah-0.3.2-amd64.deb': '310f0e78c2fce086cd0f12e44ff331b145bbb37bdb9e7589bf64082028bb9b7b',
+  'selah-0.3.2-x86_64.rpm': 'f6274f6871a5e3f613d98f4e2a61132accf720a60b442741c9117fa9236b8dc1'
+}
+
+const VERIFIED_V032_RAW: GitHubApiRelease = {
+  tag_name: 'v0.3.2',
+  name: 'Selah 0.3.2',
+  published_at: '2026-11-11T11:22:28Z',
+  html_url: 'https://github.com/Kaliza-e/Selah/releases/tag/v0.3.2',
+  body: 'Cross-platform desktop release for Windows, macOS, and Linux with verified SHA-256 checksums.',
+  prerelease: false,
+  assets: [
+    {
+      id: 735258475,
+      name: 'Selah-Setup-0.3.2-x64.exe',
+      size: 105026683,
+      browser_download_url: 'https://github.com/Kaliza-e/Selah/releases/download/v0.3.2/Selah-Setup-0.3.2-x64.exe'
+    },
+    {
+      id: 735258477,
+      name: 'Selah-Portable-0.3.2-x64.exe',
+      size: 104778059,
+      browser_download_url: 'https://github.com/Kaliza-e/Selah/releases/download/v0.3.2/Selah-Portable-0.3.2-x64.exe'
+    },
+    {
+      id: 735258482,
+      name: 'Selah-0.3.2-arm64.dmg',
+      size: 132929737,
+      browser_download_url: 'https://github.com/Kaliza-e/Selah/releases/download/v0.3.2/Selah-0.3.2-arm64.dmg'
+    },
+    {
+      id: 735258493,
+      name: 'Selah-0.3.2-x64.dmg',
+      size: 137552014,
+      browser_download_url: 'https://github.com/Kaliza-e/Selah/releases/download/v0.3.2/Selah-0.3.2-x64.dmg'
+    },
+    {
+      id: 735258480,
+      name: 'Selah-0.3.2-arm64.zip',
+      size: 127976669,
+      browser_download_url: 'https://github.com/Kaliza-e/Selah/releases/download/v0.3.2/Selah-0.3.2-arm64.zip'
+    },
+    {
+      id: 735258484,
+      name: 'Selah-0.3.2-x64.zip',
+      size: 132603862,
+      browser_download_url: 'https://github.com/Kaliza-e/Selah/releases/download/v0.3.2/Selah-0.3.2-x64.zip'
+    },
+    {
+      id: 735258478,
+      name: 'selah-0.3.2-x86_64.AppImage',
+      size: 143240010,
+      browser_download_url: 'https://github.com/Kaliza-e/Selah/releases/download/v0.3.2/selah-0.3.2-x86_64.AppImage'
+    },
+    {
+      id: 735258473,
+      name: 'selah-0.3.2-amd64.deb',
+      size: 88526238,
+      browser_download_url: 'https://github.com/Kaliza-e/Selah/releases/download/v0.3.2/selah-0.3.2-amd64.deb'
+    },
+    {
+      id: 735258479,
+      name: 'selah-0.3.2-x86_64.rpm',
+      size: 88340717,
+      browser_download_url: 'https://github.com/Kaliza-e/Selah/releases/download/v0.3.2/selah-0.3.2-x86_64.rpm'
+    },
+    {
+      id: 735258486,
+      name: 'SHA256SUMS.txt',
+      size: 806,
+      browser_download_url: 'https://github.com/Kaliza-e/Selah/releases/download/v0.3.2/SHA256SUMS.txt'
+    }
+  ]
+}
 
 export function detectVisitorOS(userAgentInput?: string, platformInput?: string): DetectedOS {
   const uaSource =
@@ -272,6 +355,22 @@ export function transformReleasePayload(
   }
 }
 
+export const BASELINE_RELEASE: ReleaseSummary = transformReleasePayload(
+  VERIFIED_V032_RAW,
+  VERIFIED_V032_CHECKSUMS
+)
+
+export const BASELINE_HISTORY: PastReleaseItem[] = [
+  {
+    tagName: BASELINE_RELEASE.tagName,
+    name: BASELINE_RELEASE.name,
+    publishedAt: BASELINE_RELEASE.publishedAt,
+    htmlUrl: BASELINE_RELEASE.htmlUrl,
+    assetCount: 9,
+    prerelease: false
+  }
+]
+
 export function pickPrimaryAssetForOS(summary: ReleaseSummary | null, os: DetectedOS): ReleaseAssetEntry | null {
   if (!summary) return null
   return summary.assetsByOS[os]?.[0] || null
@@ -285,7 +384,12 @@ export async function fetchReleasesData(
       const cachedRaw = sessionStorage.getItem(CACHE_KEY)
       if (cachedRaw) {
         const parsed = JSON.parse(cachedRaw) as ReleasesFetchResult
-        if (parsed && typeof parsed.fetchedAt === 'number' && Date.now() - parsed.fetchedAt < CACHE_TTL_MS) {
+        if (
+          parsed &&
+          parsed.latest?.hasAnyAssets &&
+          typeof parsed.fetchedAt === 'number' &&
+          Date.now() - parsed.fetchedAt < CACHE_TTL_MS
+        ) {
           return { ...parsed, fromCache: true }
         }
       }
@@ -325,6 +429,10 @@ export async function fetchReleasesData(
     }
   }
 
+  if (Object.keys(checksumMap).length === 0 && latestRaw?.tag_name === VERIFIED_V032_RAW.tag_name) {
+    checksumMap = VERIFIED_V032_CHECKSUMS
+  }
+
   const latest = latestRaw ? transformReleasePayload(latestRaw, checksumMap) : null
   const history: PastReleaseItem[] = published.map(item => ({
     tagName: item.tag_name || 'Release',
@@ -342,7 +450,7 @@ export async function fetchReleasesData(
     fromCache: false
   }
 
-  if (typeof sessionStorage !== 'undefined') {
+  if (latest?.hasAnyAssets && typeof sessionStorage !== 'undefined') {
     try {
       sessionStorage.setItem(CACHE_KEY, JSON.stringify(result))
     } catch {

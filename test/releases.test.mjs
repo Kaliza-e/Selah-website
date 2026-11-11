@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  BASELINE_RELEASE,
   detectVisitorOS,
   parseSha256Sums,
   classifyReleaseAsset,
@@ -162,4 +163,23 @@ test('transformReleasePayload organizes assets by OS and pickPrimaryAssetForOS r
   assert.equal(pickPrimaryAssetForOS(summary, 'windows')?.name, 'Selah-Setup-2.1.0-x64.exe')
   assert.equal(pickPrimaryAssetForOS(summary, 'macos'), null)
   assert.equal(pickPrimaryAssetForOS(summary, 'linux'), null)
+})
+
+test('BASELINE_RELEASE provides direct binary download URLs and SHA-256 hashes for Windows, macOS, and Linux', () => {
+  assert.equal(BASELINE_RELEASE.tagName, 'v0.3.2')
+  assert.equal(BASELINE_RELEASE.assetsByOS.windows.length, 2)
+  assert.equal(BASELINE_RELEASE.assetsByOS.macos.length, 4)
+  assert.equal(BASELINE_RELEASE.assetsByOS.linux.length, 3)
+
+  const winPrimary = pickPrimaryAssetForOS(BASELINE_RELEASE, 'windows')
+  assert.ok(winPrimary?.url.endsWith('.exe'))
+  assert.equal(winPrimary?.sha256?.length, 64)
+
+  const macPrimary = pickPrimaryAssetForOS(BASELINE_RELEASE, 'macos')
+  assert.ok(macPrimary?.url.endsWith('.dmg'))
+  assert.equal(macPrimary?.sha256?.length, 64)
+
+  const linuxPrimary = pickPrimaryAssetForOS(BASELINE_RELEASE, 'linux')
+  assert.ok(linuxPrimary?.url.endsWith('.AppImage'))
+  assert.equal(linuxPrimary?.sha256?.length, 64)
 })
