@@ -273,7 +273,14 @@ export default function App() {
   useEffect(() => {
     const controller = new AbortController()
     void loadReleases(false, controller.signal)
-    return () => controller.abort()
+    const onFocus = () => {
+      void loadReleases(false)
+    }
+    window.addEventListener('focus', onFocus)
+    return () => {
+      controller.abort()
+      window.removeEventListener('focus', onFocus)
+    }
   }, [loadReleases])
 
   const handleCopySha = async (asset: ReleaseAssetEntry) => {

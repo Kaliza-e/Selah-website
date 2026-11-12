@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   BASELINE_RELEASE,
+  compareSemver,
   detectVisitorOS,
   parseSha256Sums,
   classifyReleaseAsset,
@@ -182,4 +183,11 @@ test('BASELINE_RELEASE provides direct binary download URLs and SHA-256 hashes f
   const linuxPrimary = pickPrimaryAssetForOS(BASELINE_RELEASE, 'linux')
   assert.ok(linuxPrimary?.url.endsWith('.AppImage'))
   assert.equal(linuxPrimary?.sha256?.length, 64)
+})
+
+test('compareSemver orders semantic version tags accurately', () => {
+  assert.ok(compareSemver('v0.3.3', 'v0.3.2') > 0)
+  assert.ok(compareSemver('v0.4.0', 'v0.3.9') > 0)
+  assert.equal(compareSemver('v0.3.2', '0.3.2'), 0)
+  assert.ok(compareSemver('v0.3.2', 'v0.3.3') < 0)
 })

@@ -59,6 +59,7 @@ export interface GitHubApiRelease {
   body?: string
   prerelease?: boolean
   draft?: boolean
+  sha256sums?: Record<string, string>
   assets?: GitHubApiAsset[]
 }
 
@@ -66,9 +67,27 @@ const REPO_OWNER = 'Kaliza-e'
 const REPO_NAME = 'Selah'
 export const GITHUB_REPO_URL = `https://github.com/${REPO_OWNER}/${REPO_NAME}`
 export const GITHUB_RELEASES_URL = `${GITHUB_REPO_URL}/releases`
+export const RELEASE_MANIFEST_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/release-manifest.json`
 
-const CACHE_KEY = 'selah_release_cache_v3'
-const CACHE_TTL_MS = 5 * 60 * 1000
+const CACHE_KEY = 'selah_release_cache_v4'
+const CACHE_TTL_MS = 60 * 1000
+
+export function compareSemver(a?: string | null, b?: string | null): number {
+  const parse = (v?: string | null) =>
+    String(v || '0.0.0')
+      .replace(/^v/i, '')
+      .split(/[-+]/)[0]
+      .split('.')
+      .map(n => parseInt(n, 10) || 0)
+  const pa = parse(a)
+  const pb = parse(b)
+  const len = Math.max(pa.length, pb.length, 3)
+  for (let i = 0; i < len; i++) {
+    const diff = (pa[i] ?? 0) - (pb[i] ?? 0)
+    if (diff !== 0) return diff
+  }
+  return 0
+}
 
 const VERIFIED_V032_CHECKSUMS: Record<string, string> = {
   'Selah-Portable-0.3.2-x64.exe': 'a21f9761d9719b00541059314b5ea7bb8378ffee3d3735df282ec1a9cc6fbc7c',
@@ -399,27 +418,55 @@ export async function fetchReleasesData(
   }
 
   const listUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases?per_page=8`
-  const res = await fetch(listUrl, {
-    signal: options?.signal,
-    headers: { Accept: 'application/vnd.github+json' }
-  })
 
-  if (!res.ok) {
-    throw new Error(`GitHub Releases API returned status ${res.status}`)
+  const [apiResult, manifestResult] = await Promise.allSettled([
+    fetch(listUrl, {
+      signal: options?.signal,
+      cache: 'no-store',
+      headers: { Accept: 'application/vnd.github+json' }
+    }).then(async res => {
+      if (!res.ok) throw new Error(`GitHub Releases API returned status ${res.status}`)
+      return (await res.json()) as GitHubApiRelease[]
+    }),
+    fetch(RELEASE_MANIFEST_URL, {
+      signal: options?.signal,
+      cache: 'no-store'
+    }).then(async res => {
+      if (!res.ok) throw new Error(`Release manifest returned status ${res.status}`)
+      return (await res.json()) as GitHubApiRelease
+    })
+  ])
+
+  const rawList = apiResult.status === 'fulfilled' && Array.isArray(apiResult.value) ? apiResult.value : []
+  const published = rawList.filter(r => !r.draft)
+  const apiLatest = published.find(r => !r.prerelease) || published[0] || null
+  const manifestLatest =
+    manifestResult.status === 'fulfilled' && manifestResult.value?.tag_name ? manifestResult.value : null
+
+  if (!apiLatest && !manifestLatest) {
+    throw new Error('Unable to fetch latest release metadata from GitHub Releases or release-manifest.json')
   }
 
-  const rawList = (await res.json()) as GitHubApiRelease[]
-  const published = Array.isArray(rawList) ? rawList.filter(r => !r.draft) : []
-  const latestRaw = published.find(r => !r.prerelease) || published[0] || null
+  let latestRaw: GitHubApiRelease | null = apiLatest
+  if (manifestLatest && (!apiLatest || compareSemver(manifestLatest.tag_name, apiLatest.tag_name) > 0)) {
+    latestRaw = manifestLatest
+  }
 
   let checksumMap: Record<string, string> = {}
-  if (latestRaw && Array.isArray(latestRaw.assets)) {
+  if (manifestLatest?.sha256sums && latestRaw?.tag_name === manifestLatest.tag_name) {
+    checksumMap = { ...manifestLatest.sha256sums }
+  }
+
+  if (Object.keys(checksumMap).length === 0 && latestRaw && Array.isArray(latestRaw.assets)) {
     const checksumAsset = latestRaw.assets.find(
       a => a.name && /sha256/i.test(a.name) && a.name.endsWith('.txt') && a.browser_download_url
     )
     if (checksumAsset?.browser_download_url) {
       try {
-        const sumRes = await fetch(checksumAsset.browser_download_url, { signal: options?.signal })
+        const sumRes = await fetch(checksumAsset.browser_download_url, {
+          signal: options?.signal,
+          cache: 'no-store'
+        })
         if (sumRes.ok) {
           checksumMap = parseSha256Sums(await sumRes.text())
         }
@@ -434,7 +481,8 @@ export async function fetchReleasesData(
   }
 
   const latest = latestRaw ? transformReleasePayload(latestRaw, checksumMap) : null
-  const history: PastReleaseItem[] = published.map(item => ({
+  const historySource = published.length > 0 ? published : manifestLatest ? [manifestLatest] : []
+  const history: PastReleaseItem[] = historySource.map(item => ({
     tagName: item.tag_name || 'Release',
     name: item.name || item.tag_name || 'Release',
     publishedAt: item.published_at || null,
